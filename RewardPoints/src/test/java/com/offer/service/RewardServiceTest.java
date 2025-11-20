@@ -20,7 +20,7 @@ import com.offer.repository.TransactionRepository;
 import com.offer.dto.RewardSummary;
 
 @ExtendWith(MockitoExtension.class)
-class RewardServiceSmallTest {
+class RewardServiceTest {
 
     @Mock
     private TransactionRepository transactionRepository;
