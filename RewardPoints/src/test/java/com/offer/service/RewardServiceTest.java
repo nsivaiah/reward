@@ -32,9 +32,10 @@ class RewardServiceTest {
         rewardService = new RewardService(transactionRepository);
     }
 
-    // ----------------------------------------------------------
-    // 1. CUSTOMER NOT FOUND
-    // ----------------------------------------------------------
+    /*
+     * CUSTOMER NOT FOUND
+     */
+    
     @Test
     void throws_whenCustomerNotFound() {
         String customerId = "missing";
@@ -52,9 +53,9 @@ class RewardServiceTest {
         assertTrue(ex.getMessage().contains("Customer Not Found"));
     }
 
-    // ----------------------------------------------------------
-    // 2. NO TRANSACTIONS -> ZERO REWARDS
-    // ----------------------------------------------------------
+    /*
+     * NO TRANSACTIONS -> ZERO REWARDS
+     */
     @Test
     void returnsZero_whenNoTransactions() {
         String customerId = "c1";
@@ -81,9 +82,9 @@ class RewardServiceTest {
         assertTrue(summary.getTransactions().isEmpty());
     }
 
-    // ----------------------------------------------------------
-    // 3. ONE TRANSACTION ABOVE $100 -> 90 POINTS
-    // ----------------------------------------------------------
+    /*
+     * ONE TRANSACTION ABOVE $100 -> 90 POINTS
+     */
     @Test
     void calculatesPoints_forSingleTransactionOver100() {
         String customerId = "c2";
