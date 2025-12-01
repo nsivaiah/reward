@@ -3,8 +3,6 @@
 This project demonstrates a simple **Reward Program** for a retailer using **Spring Boot**, without using any database.  
 All data (customers & transactions) is stored **in-memory**, making it easy to run and test.
 
----
-
 ## 📌 Problem Statement
 
 A retailer rewards customers based on their purchases:
@@ -123,6 +121,29 @@ points += (amount - 50)
         
    ]
 }
+
+## Steps to Run
+
+# Clone the repository
+git clone https://github.com/nsivaiah/reward.git
+
+# Build the project using Maven
+mvn clean install
+
+# Run the Spring Boot application
+mvn spring-boot:run
+
+# Access the API
+Default URL: http://localhost:8080
+
+# Example endpoint to fetch rewards for a customer:
+http://localhost:8080/rewards/1?startDate=2025-01-01&endDate=2025-03-31
+
+# Testing
+Run all JUnit tests using Maven:
+mvn test
+
+
 
 
 
