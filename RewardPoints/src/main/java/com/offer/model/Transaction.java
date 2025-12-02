@@ -5,10 +5,12 @@ import java.util.UUID;
 
 public class Transaction {
 	
-	private final String id;
+	private final String id = UUID.randomUUID().toString();
 	private String customerId;
 	private double amount;
 	private LocalDate date;
+	
+	
 	
 	public String getId() {
 		return id;
@@ -40,10 +42,17 @@ public class Transaction {
 	
 	public Transaction(String customerId, double amount, LocalDate date) {
 		super();
-		this.id = UUID.randomUUID().toString();
 		this.customerId = customerId;
 		this.amount = amount;
 		this.date = date;
+	}
+	public Transaction() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	public void setId(String string) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

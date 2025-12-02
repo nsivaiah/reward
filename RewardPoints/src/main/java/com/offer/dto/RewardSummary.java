@@ -9,8 +9,8 @@ public class RewardSummary {
 	private String customerName;
 	private String customerMail;
 	private Map<String,Long> pointsPerMonth;
-	private long totalPoints;
-	private List<TransactionWithPoints> transactions;
+	private Long totalPoints;
+	private List<RewardTransactionPoints> transactions;
 	
 	public String getCustomerId() {
 		return customerId;
@@ -36,20 +36,20 @@ public class RewardSummary {
 	public void setPointsPerMonth(Map<String, Long> pointsPerMonth) {
 		this.pointsPerMonth = pointsPerMonth;
 	}
-	public long getTotalPoints() {
+	public Long getTotalPoints() {
 		return totalPoints;
 	}
-	public void setTotalPoints(long totalPoints) {
+	public void setTotalPoints(Long totalPoints) {
 		this.totalPoints = totalPoints;
 	}
-	public List<TransactionWithPoints> getTransactions() {
+	public List<RewardTransactionPoints> getTransactions() {
 		return transactions;
 	}
-	public void setTransactions(List<TransactionWithPoints> transactions) {
+	public void setTransactions(List<RewardTransactionPoints> transactions) {
 		this.transactions = transactions;
 	}
 	public RewardSummary(String customerId, String customerName, String customerMail, Map<String, Long> pointsPerMonth,
-			long totalPoints, List<TransactionWithPoints> transactions) {
+			Long totalPoints, List<RewardTransactionPoints> transactions) {
 		super();
 		this.customerId = customerId;
 		this.customerName = customerName;

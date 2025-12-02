@@ -2,7 +2,7 @@ package com.offer.dto;
 
 import java.time.LocalDate;
 
-public class TransactionWithPoints {
+public class RewardTransactionPoints {
 	
 	private String transactionId;
 	private LocalDate date;
@@ -33,7 +33,7 @@ public class TransactionWithPoints {
 	public void setPoints(long points) {
 		this.points = points;
 	}
-	public TransactionWithPoints(String transactionId, LocalDate date, double amount, long points) {
+	public RewardTransactionPoints(String transactionId, LocalDate date, double amount, long points) {
 		super();
 		this.transactionId = transactionId;
 		this.date = date;
@@ -45,7 +45,7 @@ public class TransactionWithPoints {
 		return "TransactionWithPoints [transactionId=" + transactionId + ", date=" + date + ", amount=" + amount
 				+ ", points=" + points + "]";
 	}
-	public TransactionWithPoints() {
+	public RewardTransactionPoints() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
