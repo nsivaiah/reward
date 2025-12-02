@@ -58,7 +58,7 @@ src/main/java/com.offer/
 │ └── RewardController.java
 │
 ├── service/
-│ └── RewardService.java
+│ └── RewardServiceImpl.java
 │
 ├── model/
 │ ├── Customer.java
@@ -69,7 +69,7 @@ src/main/java/com.offer/
 │
 └── dto/
 ├── RewardSummary.java
-└── TransactionWithPoints.java
+└── RewardTransactionPoints.java
 
 
 ## 🧮 Reward Calculation Logic
