@@ -143,6 +143,11 @@ http://localhost:8080/rewards/1?startDate=2025-01-01&endDate=2025-03-31
 Run all JUnit tests using Maven:
 mvn test
 
+## Application running status Screenshot:
+<img width="946" height="269" alt="image" src="https://github.com/user-attachments/assets/b7f5dde9-4555-4589-963f-a5595e18a665" />
+
+
+
 
 
 
