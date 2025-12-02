@@ -146,6 +146,10 @@ mvn test
 ## Application running status Screenshot:
 <img width="946" height="269" alt="image" src="https://github.com/user-attachments/assets/b7f5dde9-4555-4589-963f-a5595e18a665" />
 
+## Junit test cases status Screenshot:
+<img width="938" height="305" alt="image" src="https://github.com/user-attachments/assets/503d6efe-ad8b-481d-b9fa-f71ac5355b36" />
+
+
 
 
 
