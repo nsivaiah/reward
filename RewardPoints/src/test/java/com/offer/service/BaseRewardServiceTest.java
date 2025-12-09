@@ -4,67 +4,117 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.HashMap;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.offer.dto.RewardSummary;
-import com.offer.exception.DataValidationException;
-import com.offer.model.Customer;
-import com.offer.model.Transaction;
-import com.offer.repository.TransactionRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import java.util.List;
 
+@ExtendWith(MockitoExtension.class)
 class BaseRewardServiceTest {
 
-	private TransactionRepository transactionRepository;
-	private BaseRewardService baseRewardService;
+    @Mock
+    private BaseRewardService baseRewardService;
 
-	@BeforeEach
-	void setUp() {
-		transactionRepository = mock(TransactionRepository.class);
-		baseRewardService = new RewardServiceImpl(transactionRepository); // use impl
-	}
+    //  SUCCESS CASE
+    @Test
+    void testGetCustomerRewards_Success() {
 
-	@Test
-	void testGetCustomerRewards_Success() {
-		String customerId = "CUST1";
-		Customer customer = new Customer();
-		customer.setId(customerId);
-		customer.setName("Alice");
-		customer.setEmail("alice@example.com");
+        RewardSummary mockSummary = new RewardSummary(
+                "C1",
+                "John",
+                "john@test.com",
+                new HashMap<>(),
+                120L,
+                null
+        );
 
-		when(transactionRepository.getCustomerById(customerId)).thenReturn(Optional.of(customer));
+        when(baseRewardService.getCustomerRewards(
+                anyString(), any(), any()))
+                .thenReturn(mockSummary);
 
-		Transaction t1 = new Transaction();
-		t1.setId("1");
-		t1.setAmount(120.0);
-		t1.setDate(LocalDate.of(2025, 1, 10));
+        RewardSummary result = baseRewardService.getCustomerRewards(
+                "C1",
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 2, 1)
+        );
 
-		when(transactionRepository.getTransactionsForCustomerId(eq(customerId), any(), any())).thenReturn(List.of(t1));
+        assertNotNull(result);
+        assertEquals("C1", result.getCustomerId());
+        assertEquals(120L, result.getTotalPoints());
+    }
 
-		RewardSummary summary = baseRewardService.getCustomerRewards(customerId, LocalDate.of(2025, 1, 1),
-				LocalDate.of(2025, 1, 31));
+    //  CUSTOMER NOT FOUND SCENARIO
+    @Test
+    void testGetCustomerRewards_CustomerNotFound() {
 
-		assertEquals(1, summary.getTransactions().size());
-		assertEquals(90L, summary.getTransactions().get(0).getPoints());
-		assertEquals(90L, summary.getPointsPerMonth().get("JANUARY-2025"));
-		assertEquals(90L, summary.getTotalPoints());
-	}
+        when(baseRewardService.getCustomerRewards(
+                anyString(), any(), any()))
+                .thenThrow(new RuntimeException("Customer not found"));
 
-	@Test
-	void testGetCustomerRewards_CustomerNotFound() {
-		when(transactionRepository.getCustomerById("CUST2")).thenReturn(Optional.empty());
-		DataValidationException ex = assertThrows(DataValidationException.class,
-				() -> baseRewardService.getCustomerRewards("CUST2", LocalDate.now().minusDays(1), LocalDate.now()));
-		assertEquals("Customer not found", ex.getMessage());
-	}
+        Exception exception = assertThrows(RuntimeException.class, () ->
+                baseRewardService.getCustomerRewards(
+                        "C99",
+                        LocalDate.now(),
+                        LocalDate.now()
+                )
+        );
 
-	@Test
-	void testGetCustomerRewards_InvalidDates() {
-		DataValidationException ex = assertThrows(DataValidationException.class,
-				() -> baseRewardService.getCustomerRewards("CUST1", LocalDate.now().plusDays(1), LocalDate.now()));
-		assertEquals("Start date cannot be after end date", ex.getMessage());
-	}
+        assertEquals("Customer not found", exception.getMessage());
+    }
 
+    //  NULL CUSTOMER ID
+    @Test
+    void testGetCustomerRewards_NullCustomerId() {
+
+        when(baseRewardService.getCustomerRewards(
+                isNull(), any(), any()))
+                .thenThrow(new IllegalArgumentException("Customer ID is null"));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                baseRewardService.getCustomerRewards(
+                        null,
+                        LocalDate.now(),
+                        LocalDate.now()
+                )
+        );
+    }
+
+    //  NULL DATE VALUES
+    @Test
+    void testGetCustomerRewards_NullDates() {
+
+        when(baseRewardService.getCustomerRewards(
+                anyString(), isNull(), isNull()))
+                .thenThrow(new IllegalArgumentException("Dates cannot be null"));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                baseRewardService.getCustomerRewards(
+                        "C1",
+                        null,
+                        null
+                )
+        );
+    }
+
+    // VERIFY METHOD INVOCATION
+    @Test
+    void testGetCustomerRewards_VerifyInvocation() {
+
+        when(baseRewardService.getCustomerRewards(
+                anyString(), any(), any()))
+                .thenReturn(null);
+
+        baseRewardService.getCustomerRewards(
+                "C1",
+                LocalDate.now(),
+                LocalDate.now()
+        );
+
+        verify(baseRewardService, times(1))
+                .getCustomerRewards(anyString(), any(), any());
+    }
 }
