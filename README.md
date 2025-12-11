@@ -147,7 +147,8 @@ mvn test
 <img width="946" height="269" alt="image" src="https://github.com/user-attachments/assets/b7f5dde9-4555-4589-963f-a5595e18a665" />
 
 ## Junit test cases status Screenshot:
-<img width="938" height="309" alt="image" src="https://github.com/user-attachments/assets/1ca0ad7d-9243-442a-a5c7-d807e1417805" />
+<img width="945" height="352" alt="image" src="https://github.com/user-attachments/assets/7d0dc9df-1beb-47a2-b2c4-487d165b4d3b" />
+
 
 
 
