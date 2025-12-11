@@ -1,6 +1,7 @@
 package com.offer.service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +20,6 @@ import com.offer.model.Customer;
 import com.offer.model.Transaction;
 import com.offer.repository.TransactionRepository;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 @Service
 @Validated
@@ -37,10 +36,7 @@ public class RewardServiceImpl implements RewardService {
 	/*
 	 * Below logic is to fetch the reward points
 	 */
-	public RewardSummary getCustomerRewards(
-            @NotBlank(message = "Customer ID cannot be null or empty") String customerId,
-            @NotNull(message = "Start date cannot be null") LocalDate startDate,
-            @NotNull(message = "End date cannot be null") LocalDate endDate) {
+	public RewardSummary getCustomerRewards(String customerId,LocalDate startDate, LocalDate endDate) {
 
 		/*
 		 * Below method is used to validate input parameters
@@ -74,9 +70,29 @@ public class RewardServiceImpl implements RewardService {
 
 			String monthAndYearKey = java.time.YearMonth.from(transaction.getDate()).toString();
 			monthlyPointsInYear.merge(monthAndYearKey, points, Long::sum);
+			
+		    if (monthlyPointsInYear.get(monthAndYearKey) < 0) {
+		        throw new DataValidationException("Monthly points cannot be negative for month: " + monthAndYearKey);
+		    }
 
 			total += points;
 		}
+		
+        // Validate all months in the range have at least one transaction
+        YearMonth startMonth = YearMonth.from(startDate);
+        YearMonth endMonth = YearMonth.from(endDate);
+        YearMonth cursor = startMonth;
+
+        while (!cursor.isAfter(endMonth)) {
+            String key = cursor.toString();
+            if (!monthlyPointsInYear.containsKey(key)) {
+                throw new DataValidationException(
+                        "Missing reward data for month: " + key
+                                + ". Each month in the range must have at least one transaction.");
+            }
+            cursor = cursor.plusMonths(1);
+        }
+
 
 		log.info(
 			    "Reward summary generated | customerId={} | customerName={} | from={} | to={} | totalPoints={} | monthlyBreakup={}",

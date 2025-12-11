@@ -1,120 +1,104 @@
 package com.offer.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.offer.dto.RewardSummary;
 
-@ExtendWith(MockitoExtension.class)
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.executable.ExecutableValidator;
+
 class BaseRewardServiceTest {
 
-    @Mock
-    private BaseRewardService baseRewardService;
+    private Validator validator;
+    private ExecutableValidator executableValidator;
+    private BaseRewardService service;
 
-    //  SUCCESS CASE
-    @Test
-    void testGetCustomerRewards_Success() {
+    @BeforeEach
+    void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+        executableValidator = validator.forExecutables();
 
-        RewardSummary mockSummary = new RewardSummary(
-                "C1",
-                "John",
-                "john@test.com",
-                new HashMap<>(),
-                120L,
-                null
-        );
-
-        when(baseRewardService.getCustomerRewards(
-                anyString(), any(), any()))
-                .thenReturn(mockSummary);
-
-        RewardSummary result = baseRewardService.getCustomerRewards(
-                "C1",
-                LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 2, 1)
-        );
-
-        assertNotNull(result);
-        assertEquals("C1", result.getCustomerId());
-        assertEquals(120L, result.getTotalPoints());
+        // Anonymous implementation for testing
+        service = new BaseRewardService() {
+            @Override
+            public RewardSummary getCustomerRewards(String customerId, LocalDate startDate, LocalDate endDate) {
+                return null; // logic not needed for validation tests
+            }
+        };
     }
 
-    //  CUSTOMER NOT FOUND SCENARIO
     @Test
-    void testGetCustomerRewards_CustomerNotFound() {
+    void testCustomerIdNotBlankOrNull() throws Exception {
+        Method method = service.getClass().getMethod(
+                "getCustomerRewards", String.class, LocalDate.class, LocalDate.class);
 
-        when(baseRewardService.getCustomerRewards(
-                anyString(), any(), any()))
-                .thenThrow(new RuntimeException("Customer not found"));
+        // Test blank customerId
+        Object[] paramsBlank = { "   ", LocalDate.now(), LocalDate.now() };
+        Set<ConstraintViolation<BaseRewardService>> violationsBlank =
+                executableValidator.validateParameters(service, method, paramsBlank);
 
-        Exception exception = assertThrows(RuntimeException.class, () ->
-                baseRewardService.getCustomerRewards(
-                        "C99",
-                        LocalDate.now(),
-                        LocalDate.now()
-                )
-        );
+        assertFalse(violationsBlank.isEmpty());
+        assertTrue(violationsBlank.stream()
+                .anyMatch(v -> v.getMessage().contains("Customer ID cannot be null or empty")));
 
-        assertEquals("Customer not found", exception.getMessage());
+        // Test null customerId
+        Object[] paramsNull = { null, LocalDate.now(), LocalDate.now() };
+        Set<ConstraintViolation<BaseRewardService>> violationsNull =
+                executableValidator.validateParameters(service, method, paramsNull);
+
+        assertFalse(violationsNull.isEmpty());
+        assertTrue(violationsNull.stream()
+                .anyMatch(v -> v.getMessage().contains("Customer ID cannot be null or empty")));
     }
 
-    //  NULL CUSTOMER ID
     @Test
-    void testGetCustomerRewards_NullCustomerId() {
+    void testStartDateNotNull() throws Exception {
+        Method method = service.getClass().getMethod(
+                "getCustomerRewards", String.class, LocalDate.class, LocalDate.class);
 
-        when(baseRewardService.getCustomerRewards(
-                isNull(), any(), any()))
-                .thenThrow(new IllegalArgumentException("Customer ID is null"));
+        Object[] params = { "C1", null, LocalDate.now() };
+        Set<ConstraintViolation<BaseRewardService>> violations =
+                executableValidator.validateParameters(service, method, params);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                baseRewardService.getCustomerRewards(
-                        null,
-                        LocalDate.now(),
-                        LocalDate.now()
-                )
-        );
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("Start date cannot be null")));
     }
 
-    //  NULL DATE VALUES
     @Test
-    void testGetCustomerRewards_NullDates() {
+    void testEndDateNotNull() throws Exception {
+        Method method = service.getClass().getMethod(
+                "getCustomerRewards", String.class, LocalDate.class, LocalDate.class);
 
-        when(baseRewardService.getCustomerRewards(
-                anyString(), isNull(), isNull()))
-                .thenThrow(new IllegalArgumentException("Dates cannot be null"));
+        Object[] params = { "C1", LocalDate.now(), null };
+        Set<ConstraintViolation<BaseRewardService>> violations =
+                executableValidator.validateParameters(service, method, params);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                baseRewardService.getCustomerRewards(
-                        "C1",
-                        null,
-                        null
-                )
-        );
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("End date cannot be null")));
     }
 
-    // VERIFY METHOD INVOCATION
     @Test
-    void testGetCustomerRewards_VerifyInvocation() {
+    void testValidParameters_NoViolations() throws Exception {
+        Method method = service.getClass().getMethod(
+                "getCustomerRewards", String.class, LocalDate.class, LocalDate.class);
 
-        when(baseRewardService.getCustomerRewards(
-                anyString(), any(), any()))
-                .thenReturn(null);
+        Object[] params = { "C1", LocalDate.of(2024, 1, 1), LocalDate.of(2024, 2, 1) };
+        Set<ConstraintViolation<BaseRewardService>> violations =
+                executableValidator.validateParameters(service, method, params);
 
-        baseRewardService.getCustomerRewards(
-                "C1",
-                LocalDate.now(),
-                LocalDate.now()
-        );
-
-        verify(baseRewardService, times(1))
-                .getCustomerRewards(anyString(), any(), any());
+        assertTrue(violations.isEmpty());
     }
 }

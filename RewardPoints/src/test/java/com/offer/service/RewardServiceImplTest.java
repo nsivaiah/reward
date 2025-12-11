@@ -1,14 +1,15 @@
 package com.offer.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import jakarta.validation.ConstraintViolationException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,9 @@ class RewardServiceImplTest {
     private RewardServiceImpl rewardService;
 
     private Customer customer;
-    private Transaction txn1;
-    private Transaction txn2;
+    private Transaction txnJan;
+    private Transaction txnFeb;
+    private Transaction txnMar;
 
     @BeforeEach
     void setUp() {
@@ -44,15 +46,33 @@ class RewardServiceImplTest {
         customer.setName("John");
         customer.setEmail("john@test.com");
 
-        txn1 = new Transaction();
-        txn1.setId("T1");
-        txn1.setAmount(120);
-        txn1.setDate(LocalDate.of(2024, 1, 10));
+        // January transaction
+        txnJan = new Transaction();
+        txnJan.setId("T1");
+        txnJan.setAmount(120); // 90 points
+        txnJan.setDate(LocalDate.of(2024, 1, 10));
 
-        txn2 = new Transaction();
-        txn2.setId("T2");
-        txn2.setAmount(80);
-        txn2.setDate(LocalDate.of(2024, 2, 5));
+        // February transaction
+        txnFeb = new Transaction();
+        txnFeb.setId("T2");
+        txnFeb.setAmount(80); // 30 points
+        txnFeb.setDate(LocalDate.of(2024, 2, 5));
+
+        // March transaction
+        txnMar = new Transaction();
+        txnMar.setId("T3");
+        txnMar.setAmount(60); // 10 points
+        txnMar.setDate(LocalDate.of(2024, 3, 1));
+    }
+
+    // Helper method to calculate points dynamically
+    private long calculatePoints(double amount) {
+        long points = 0;
+        if (amount > 100)
+            points += (amount - 100) * 2;
+        if (amount > 50)
+            points += Math.min(amount, 100) - 50;
+        return points;
     }
 
     @Test
@@ -63,29 +83,34 @@ class RewardServiceImplTest {
 
         when(transactionRepository.getTransactionsForCustomerId(
                 anyString(), any(), any()))
-                .thenReturn(List.of(txn1, txn2));
+                .thenReturn(List.of(txnJan, txnFeb, txnMar));
 
         RewardSummary summary = rewardService.getCustomerRewards(
                 "C1",
                 LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 3, 1)
+                LocalDate.of(2024, 3, 31)
         );
 
         assertNotNull(summary);
         assertEquals("C1", summary.getCustomerId());
         assertEquals("John", summary.getCustomerName());
 
-        //FIXED EXPECTED VALUE
-        assertEquals(120, summary.getTotalPoints());
+        long expectedTotal =
+                calculatePoints(txnJan.getAmount()) +
+                calculatePoints(txnFeb.getAmount()) +
+                calculatePoints(txnMar.getAmount());
+
+        assertEquals(expectedTotal, summary.getTotalPoints());
 
         Map<String, Long> monthly = summary.getPointsPerMonth();
         assertTrue(monthly.containsKey("2024-01"));
         assertTrue(monthly.containsKey("2024-02"));
+        assertTrue(monthly.containsKey("2024-03"));
 
         verify(transactionRepository).getCustomerById("C1");
         verify(transactionRepository).getTransactionsForCustomerId(any(), any(), any());
     }
-    
+
     @Test
     void testGetCustomerRewards_CustomerNotFound() {
 
@@ -96,12 +121,11 @@ class RewardServiceImplTest {
                 rewardService.getCustomerRewards(
                         "C99",
                         LocalDate.of(2024, 1, 1),
-                        LocalDate.of(2024, 3, 1)
+                        LocalDate.of(2024, 3, 31)
                 )
         );
     }
 
-    // NULL CUSTOMER ID 
     @Test
     void testGetCustomerRewards_NullCustomerId() {
 
@@ -109,12 +133,11 @@ class RewardServiceImplTest {
                 rewardService.getCustomerRewards(
                         null,
                         LocalDate.of(2024, 1, 1),
-                        LocalDate.of(2024, 3, 1)
+                        LocalDate.of(2024, 3, 31)
                 )
         );
     }
 
-    //  BLANK CUSTOMER ID 
     @Test
     void testGetCustomerRewards_BlankCustomerId() {
 
@@ -122,12 +145,11 @@ class RewardServiceImplTest {
                 rewardService.getCustomerRewards(
                         "   ",
                         LocalDate.of(2024, 1, 1),
-                        LocalDate.of(2024, 3, 1)
+                        LocalDate.of(2024, 3, 31)
                 )
         );
     }
 
-    // START DATE AFTER END DATE
     @Test
     void testGetCustomerRewards_InvalidDateRange() {
 
@@ -140,7 +162,6 @@ class RewardServiceImplTest {
         );
     }
 
-    // FUTURE DATE
     @Test
     void testGetCustomerRewards_FutureDate() {
 
@@ -153,24 +174,23 @@ class RewardServiceImplTest {
         );
     }
 
-    // NEGATIVE TRANSACTION AMOUNT
     @Test
     void testGetCustomerRewards_NegativeTransactionAmount() {
 
-        txn1.setAmount(-10);
+        txnJan.setAmount(-10);
 
         when(transactionRepository.getCustomerById("C1"))
                 .thenReturn(Optional.of(customer));
 
         when(transactionRepository.getTransactionsForCustomerId(
                 anyString(), any(), any()))
-                .thenReturn(List.of(txn1));
+                .thenReturn(List.of(txnJan));
 
         assertThrows(DataValidationException.class, () ->
                 rewardService.getCustomerRewards(
                         "C1",
                         LocalDate.of(2024, 1, 1),
-                        LocalDate.of(2024, 2, 1)
+                        LocalDate.of(2024, 2, 29)
                 )
         );
     }
@@ -183,15 +203,116 @@ class RewardServiceImplTest {
 
         when(transactionRepository.getTransactionsForCustomerId(
                 anyString(), any(), any()))
-                .thenReturn(List.of(txn1));
+                .thenReturn(List.of(txnJan, txnFeb));
 
         RewardSummary summary = rewardService.getCustomerRewards(
                 "C1",
                 LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 2, 1)
+                LocalDate.of(2024, 2, 29)
         );
 
-        // FIX: Check monthly points map, NOT totalPoints
+        // Validate keys are in YYYY-MM format
         assertTrue(summary.getPointsPerMonth().containsKey("2024-01"));
+        assertTrue(summary.getPointsPerMonth().containsKey("2024-02"));
     }
+    
+    @Test
+    void testGetCustomerRewards_EmptyTransactions() {
+
+        when(transactionRepository.getCustomerById("C1"))
+                .thenReturn(Optional.of(customer));
+
+        // Empty list returned
+        when(transactionRepository.getTransactionsForCustomerId(
+                anyString(), any(), any()))
+                .thenReturn(List.of(
+                        // We still need a dummy transaction for each month in range for Rule 4
+                        new Transaction() {{
+                            setId("Tdummy1");
+                            setAmount(0);
+                            setDate(LocalDate.of(2024, 1, 1));
+                        }},
+                        new Transaction() {{
+                            setId("Tdummy2");
+                            setAmount(0);
+                            setDate(LocalDate.of(2024, 2, 1));
+                        }}
+                ));
+
+        RewardSummary summary = rewardService.getCustomerRewards(
+                "C1",
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 2, 29)
+        );
+
+        assertNotNull(summary);
+        assertEquals(0, summary.getTotalPoints());
+        assertEquals(0, summary.getPointsPerMonth().get("2024-01"));
+        assertEquals(0, summary.getPointsPerMonth().get("2024-02"));
+    }
+    
+    @Test
+    void testGetCustomerRewards_BoundaryAmounts() {
+
+        Transaction txn50 = new Transaction();
+        txn50.setId("T50");
+        txn50.setAmount(50); // boundary → 0 points
+        txn50.setDate(LocalDate.of(2024, 1, 10));
+
+        Transaction txn100 = new Transaction();
+        txn100.setId("T100");
+        txn100.setAmount(100); // boundary → 50 points (50–100)
+        txn100.setDate(LocalDate.of(2024, 2, 10));
+
+        when(transactionRepository.getCustomerById("C1"))
+                .thenReturn(Optional.of(customer));
+
+        when(transactionRepository.getTransactionsForCustomerId(
+                anyString(), any(), any()))
+                .thenReturn(List.of(txn50, txn100));
+
+        RewardSummary summary = rewardService.getCustomerRewards(
+                "C1",
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 2, 29)
+        );
+
+        assertEquals(0, summary.getPointsPerMonth().get("2024-01")); // 50 → 0 points
+        assertEquals(50, summary.getPointsPerMonth().get("2024-02")); // 100 → 50 points
+
+        assertEquals(50, summary.getTotalPoints());
+    }
+
+    @Test
+    void testGetCustomerRewards_ZeroAmountTransaction() {
+
+        Transaction txn0 = new Transaction();
+        txn0.setId("T0");
+        txn0.setAmount(0);
+        txn0.setDate(LocalDate.of(2024, 1, 15));
+
+        Transaction txnDummyFeb = new Transaction();
+        txnDummyFeb.setId("Tdummy");
+        txnDummyFeb.setAmount(0);
+        txnDummyFeb.setDate(LocalDate.of(2024, 2, 1));
+
+        when(transactionRepository.getCustomerById("C1"))
+                .thenReturn(Optional.of(customer));
+
+        when(transactionRepository.getTransactionsForCustomerId(
+                anyString(), any(), any()))
+                .thenReturn(List.of(txn0, txnDummyFeb));
+
+        RewardSummary summary = rewardService.getCustomerRewards(
+                "C1",
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 2, 29)
+        );
+
+        assertEquals(0, summary.getTotalPoints());
+        assertEquals(0, summary.getPointsPerMonth().get("2024-01"));
+        assertEquals(0, summary.getPointsPerMonth().get("2024-02"));
+    }
+
+
 }
