@@ -89,39 +89,36 @@ points += (amount - 50)
 
   ## 📞 Example Response (Simplified)
 {
-    "customerId": "1",
-    "customerName": "Neelima Sivaiahgari",
-    "customerMail": "neelima@gmail.com",
-    "pointsPerMonth": {
-        "JANUARY": 90,
-        "MARCH": 250,
-        "FEBRUARY": 25
+  "customerId": "1",
+  "customerName": "Neelima Sivaiahgari",
+  "customerMail": "neelima@gmail.com",
+  "pointsPerMonth": {
+    "JANUARY": 90,
+    "MARCH": 250,
+    "FEBRUARY": 25
+  },
+  "totalPoints": 365,
+  "transactions": [
+    {
+      "transactionId": "486d5400-e155-4fab-8ccd-46afc25941d7",
+      "date": "2025-01-10",
+      "amount": 120,
+      "points": 90
     },
-    "totalPoints": 365,
-    "transactions":  [
-    
-        {
-           "transactionId": "486d5400-e155-4fab-8ccd-46afc25941d7",
-            "date": "2025-01-10",
-            "amount": 120,
-            "points": 90
-        },
-        {
-            "transactionId": "6db68bad-e981-4f9e-a4aa-5830eac34e6e",
-            "date": "2025-02-05",
-            "amount": 75,
-            "points": 25
-        },
-        {
-            "transactionId": "bae96c21-d97f-46b8-b4dc-3629ca4f681b",
-            "date": "2025-03-12",
-            "amount": 200,
-            "points": 250
-        }
-        
-   ]
+    {
+      "transactionId": "6db68bad-e981-4f9e-a4aa-5830eac34e6e",
+      "date": "2025-02-05",
+      "amount": 75,
+      "points": 25
+    },
+    {
+      "transactionId": "bae96c21-d97f-46b8-b4dc-3629ca4f681b",
+      "date": "2025-03-12",
+      "amount": 200,
+      "points": 250
+    }
+  ]
 }
-
 ## Steps to Run
 
 # Clone the repository
